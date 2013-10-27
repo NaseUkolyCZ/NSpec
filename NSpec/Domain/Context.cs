@@ -111,7 +111,15 @@ namespace NSpec.Domain
                 if (example.HasRun) formatter.Write(example, Level);
             }
 
-            Contexts.Do(c => c.Run(formatter, failFast, nspec));
+            //allow Contexts to change dynamically during the test
+            List<Context> runContexts = new List<Context>();
+            List<Context> contexts  = new List<Context>(Contexts);
+            while (contexts.Count()>0)
+            {
+                contexts.Do(c => c.Run(formatter, failFast, nspec));
+                runContexts.AddRange(contexts);
+                contexts = new List<Context>(Contexts.Where(p => !runContexts.Contains(p)));
+            }
 
             if (AllExamples().Count() > 0) RunAndHandleException(RunAfterAll, nspec, ref Exception);
         }
